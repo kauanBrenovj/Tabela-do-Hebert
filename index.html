@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabela do Herbert - Salvamento Automático</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #eef2ff; padding: 20px; }
+    h1 { text-align: center; color: #003366; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    th { background: #4A90E2; color: white; padding: 10px; font-size: 14px; }
+    td { padding: 8px; border: 1px solid #cccccc; background: #f6f8ff; }
+    input { width: 95%; padding: 5px; border: 1px solid #aaa; border-radius: 4px; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; background:#4A90E2;color:white;border:none;border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h1>Tabela do Herbert</h1>
+
+  <table id="tabela">
+    <tr>
+      <th>Dia</th>
+      <th>Manhã</th>
+      <th>Noite</th>
+      <th>🗡️ Freg Totais</th>
+      <th>💰 Platina Gasta</th>
+    </tr>
+  </table>
+
+  <button onclick="baixarTabela()">Salvar tabela</button>
+
+<script>
+const tabela = document.getElementById("tabela");
+
+// Criar 30 linhas
+for (let i = 1; i <= 30; i++) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${i}</td>
+    <td><input data-dia="${i}" data-col="manha"></td>
+    <td><input data-dia="${i}" data-col="noite"></td>
+    <td><input data-dia="${i}" data-col="freg"></td>
+    <td><input data-dia="${i}" data-col="platina"></td>
+  `;
+  tabela.appendChild(tr);
+}
+
+// Carregar dados salvos
+function carregarDados() {
+  const salvar = JSON.parse(localStorage.getItem("tabelaHerbert") || "{}");
+
+  document.querySelectorAll("input").forEach(input => {
+    const dia = input.dataset.dia;
+    const col = input.dataset.col;
+
+    if (salvar[dia] && salvar[dia][col] !== undefined) {
+      input.value = salvar[dia][col];
+    }
+
+    input.addEventListener("input", salvarDados);
+  });
+}
+
+// Salvar dados no localStorage
+function salvarDados() {
+  const dados = {};
+
+  document.querySelectorAll("input").forEach(input => {
+    const dia = input.dataset.dia;
+    const col = input.dataset.col;
+
+    if (!dados[dia]) dados[dia] = {};
+    dados[dia][col] = input.value;
+  });
+
+  localStorage.setItem("tabelaHerbert", JSON.stringify(dados));
+}
+
+// Baixar arquivo da tabela
+function baixarTabela() {
+  const linhas = document.querySelectorAll("#tabela tr");
+
+  let html = `
+  <!DOCTYPE html>
+  <html lang='pt-BR'>
+  <head>
+    <meta charset='UTF-8'>
+    <title>Tabela Salva</title>
+    <style>
+      body { font-family: Arial; padding:20px; background:#eef2ff;}
+      table { width:100%; border-collapse:collapse; background:white;}
+      th { background:#4A90E2; color:white; padding:10px;}
+      td { border:1px solid #ccc; padding:8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Tabela Salva</h1>
+    <table>
+  `;
+
+  linhas.forEach((linha, index) => {
+    if (index === 0) {
+      html += "<tr>" + linha.innerHTML + "</tr>";
+    } else {
+      const tds = linha.querySelectorAll("td");
+      html += "<tr>";
+      tds.forEach((td, i) => {
+        if (i === 0) {
+          html += "<td>" + td.innerText + "</td>";
+        } else {
+          const valor = td.querySelector("input").value;
+          html += "<td>" + valor + "</td>";
+        }
+      });
+      html += "</tr>";
+    }
+  });
+
+  html += "</table></body></html>";
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tabela_salva.html";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// Inicializar
+carregarDados();
+</script>
+
+</body>
+</html>
